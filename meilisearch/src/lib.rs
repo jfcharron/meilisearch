@@ -29,6 +29,7 @@ use actix_web::web::Data;
 use actix_web::{web, HttpRequest};
 use analytics::Analytics;
 use anyhow::bail;
+use apistos::app::{BuildConfig, OpenApiWrapper};
 use error::PayloadError;
 use extractors::payload::PayloadConfig;
 use index_scheduler::{IndexScheduler, IndexSchedulerOptions};
@@ -131,6 +132,21 @@ pub fn create_app(
         InitError = (),
     >,
 > {
+    let spec = apistos::spec::Spec {
+      info: apistos::info::Info {
+        title: "Meilisearch API".to_string(),
+        description: Some(
+          "This is an API documented using Apistos,\na wonderful new tool to document your actix API !".to_string(),
+        ),
+        ..Default::default()
+      },
+      servers: vec![apistos::server::Server {
+        url: "/".to_string(),
+        ..Default::default()
+      }],
+      ..Default::default()
+    };
+
     let app = actix_web::App::new()
         .configure(|s| {
             configure_data(
@@ -157,6 +173,15 @@ pub fn create_app(
     .wrap(tracing_actix_web::TracingLogger::<AwebTracingLogger>::new())
     .wrap(actix_web::middleware::Compress::default())
     .wrap(actix_web::middleware::NormalizePath::new(actix_web::middleware::TrailingSlash::Trim))
+    .document(spec)
+    .build_with(
+        "/openapi.json",
+        BuildConfig::default()
+            .with(apistos::RapidocConfig::new(&"/rapidoc"))
+            .with(apistos::RedocConfig::new(&"/redoc"))
+            .with(apistos::ScalarConfig::new(&"/scalar"))
+            .with(apistos::SwaggerUIConfig::new(&"/swagger")),
+    )
 }
 
 struct AwebTracingLogger;

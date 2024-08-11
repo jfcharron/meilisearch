@@ -3,7 +3,9 @@ use std::marker::PhantomData;
 use std::ops::ControlFlow;
 use std::str::FromStr;
 
+use apistos::{ApiComponent, ApiErrorComponent};
 use deserr::{DeserializeError, Deserr, MergeWithError, ValueKind};
+use schemars::JsonSchema;
 use serde::de::Visitor;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -147,15 +149,15 @@ where
 /// be equal to a star (*), or another value
 ///
 /// It is a convenient alternative to `Option<StarOr<T>>`.
-#[derive(Debug, Default, Clone, Copy)]
-pub enum OptionStarOr<T> {
+#[derive(Debug, Default, Clone, Copy, ApiComponent, JsonSchema)]
+pub enum OptionStarOr<T: JsonSchema> {
     #[default]
     None,
     Star,
     Other(T),
 }
 
-impl<T> OptionStarOr<T> {
+impl<T: JsonSchema> OptionStarOr<T> {
     pub fn is_some(&self) -> bool {
         match self {
             Self::None => false,
@@ -169,7 +171,10 @@ impl<T> OptionStarOr<T> {
             Self::Other(x) => Some(x),
         }
     }
-    pub fn try_map<U, E, F: Fn(T) -> Result<U, E>>(self, map_f: F) -> Result<OptionStarOr<U>, E> {
+    pub fn try_map<U: JsonSchema, E, F: Fn(T) -> Result<U, E>>(
+        self,
+        map_f: F,
+    ) -> Result<OptionStarOr<U>, E> {
         match self {
             OptionStarOr::None => Ok(OptionStarOr::None),
             OptionStarOr::Star => Ok(OptionStarOr::Star),
@@ -180,7 +185,7 @@ impl<T> OptionStarOr<T> {
 
 impl<T> FromQueryParameter for OptionStarOr<T>
 where
-    T: FromQueryParameter,
+    T: FromQueryParameter + JsonSchema,
 {
     type Err = T::Err;
     fn from_query_param(p: &str) -> Result<Self, Self::Err> {
@@ -194,7 +199,7 @@ where
 impl<T, E> Deserr<E> for OptionStarOr<T>
 where
     E: DeserializeError + MergeWithError<T::Err>,
-    T: FromQueryParameter,
+    T: FromQueryParameter + JsonSchema,
 {
     fn deserialize_from_value<V: deserr::IntoValue>(
         value: deserr::Value<V>,
@@ -221,15 +226,15 @@ where
 }
 
 /// A type representing the content of a query parameter that can either not exist, be equal to a star (*), or represent a list of other values
-#[derive(Debug, Default, Clone)]
-pub enum OptionStarOrList<T> {
+#[derive(Debug, Default, Clone, ApiComponent, JsonSchema)]
+pub enum OptionStarOrList<T: JsonSchema> {
     #[default]
     None,
     Star,
     List(Vec<T>),
 }
 
-impl<T> OptionStarOrList<T> {
+impl<T: JsonSchema> OptionStarOrList<T> {
     pub fn is_some(&self) -> bool {
         match self {
             Self::None => false,
@@ -237,14 +242,14 @@ impl<T> OptionStarOrList<T> {
             Self::List(_) => true,
         }
     }
-    pub fn map<U, F: Fn(T) -> U>(self, map_f: F) -> OptionStarOrList<U> {
+    pub fn map<U: JsonSchema, F: Fn(T) -> U>(self, map_f: F) -> OptionStarOrList<U> {
         match self {
             Self::None => OptionStarOrList::None,
             Self::Star => OptionStarOrList::Star,
             Self::List(xs) => OptionStarOrList::List(xs.into_iter().map(map_f).collect()),
         }
     }
-    pub fn try_map<U, E, F: Fn(T) -> Result<U, E>>(
+    pub fn try_map<U: JsonSchema, E, F: Fn(T) -> Result<U, E>>(
         self,
         map_f: F,
     ) -> Result<OptionStarOrList<U>, E> {
@@ -271,7 +276,7 @@ impl<T> OptionStarOrList<T> {
     }
 }
 
-impl<T, E> Deserr<E> for OptionStarOrList<T>
+impl<T: JsonSchema, E> Deserr<E> for OptionStarOrList<T>
 where
     E: DeserializeError + MergeWithError<T::Err>,
     T: FromQueryParameter,

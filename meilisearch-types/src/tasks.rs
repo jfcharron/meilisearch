@@ -3,10 +3,12 @@ use std::collections::HashSet;
 use std::fmt::{Display, Write};
 use std::str::FromStr;
 
+use apistos::ApiComponent;
 use enum_iterator::Sequence;
 use milli::update::IndexDocumentsMethod;
 use milli::Object;
 use roaring::RoaringBitmap;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, Serializer};
 use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
@@ -361,7 +363,19 @@ impl From<&KindWithContent> for Option<Details> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Sequence)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Sequence,
+    ApiComponent,
+    JsonSchema,
+)]
 #[serde(rename_all = "camelCase")]
 pub enum Status {
     Enqueued,
@@ -420,7 +434,19 @@ impl fmt::Display for ParseTaskStatusError {
 }
 impl std::error::Error for ParseTaskStatusError {}
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Sequence)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    Sequence,
+    ApiComponent,
+    JsonSchema,
+)]
 #[serde(rename_all = "camelCase")]
 pub enum Kind {
     DocumentAdditionOrUpdate,

@@ -72,6 +72,20 @@ impl aweb::error::ResponseError for ResponseError {
     }
 }
 
+use apistos::ApiErrorComponent;
+impl ApiErrorComponent for ResponseError {
+    fn schemas_by_status_code() -> std::collections::BTreeMap<
+        String,
+        (String, apistos::reference_or::ReferenceOr<apistos::Schema>),
+    > {
+        std::collections::BTreeMap::default()
+    }
+
+    fn error_responses() -> Vec<(String, apistos::paths::Response)> {
+        vec![]
+    }
+}
+
 pub trait ErrorCode {
     fn error_code(&self) -> Code;
 

@@ -2,6 +2,7 @@ use std::convert::Infallible;
 
 use actix_web::web::Data;
 use actix_web::{web, HttpRequest, HttpResponse};
+use apistos::api_operation;
 use deserr::actix_web::{AwebJson, AwebQueryParameter};
 use deserr::{DeserializeError, Deserr, ValuePointerRef};
 use index_scheduler::IndexScheduler;
@@ -93,6 +94,7 @@ impl ListIndexes {
     }
 }
 
+// #[api_operation(error_code = 400)]
 pub async fn list_indexes(
     index_scheduler: GuardedData<ActionPolicy<{ actions::INDEXES_GET }>, Data<IndexScheduler>>,
     paginate: AwebQueryParameter<ListIndexes, DeserrQueryParamError>,

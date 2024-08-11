@@ -14,6 +14,10 @@ use meilisearch_types::error::{Code, ResponseError};
 
 use self::policies::AuthError;
 
+use apistos::ApiSecurity;
+
+#[derive(ApiSecurity)]
+#[openapi_security(scheme(security_type(api_key(name = "api_key", api_key_in = "header"))))]
 pub struct GuardedData<P, D> {
     data: D,
     filters: AuthFilter,

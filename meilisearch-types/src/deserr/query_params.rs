@@ -15,7 +15,9 @@ use std::convert::Infallible;
 use std::ops::Deref;
 use std::str::FromStr;
 
+use apistos::ApiComponent;
 use deserr::{DeserializeError, Deserr, MergeWithError, ValueKind};
+use schemars::JsonSchema;
 
 use super::{DeserrParseBoolError, DeserrParseIntError};
 use crate::index_uid::IndexUid;
@@ -26,10 +28,10 @@ use crate::tasks::{Kind, Status};
 ///
 /// Note that if the field is optional, it is better to use
 /// `Option<Param<T>>` instead of `Param<Option<T>>`.
-#[derive(Default, Debug, Clone, Copy)]
-pub struct Param<T>(pub T);
+#[derive(Default, Debug, Clone, Copy, ApiComponent, JsonSchema)]
+pub struct Param<T: JsonSchema>(pub T);
 
-impl<T> Deref for Param<T> {
+impl<T: JsonSchema> Deref for Param<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -37,7 +39,7 @@ impl<T> Deref for Param<T> {
     }
 }
 
-impl<T, E> Deserr<E> for Param<T>
+impl<T: JsonSchema, E> Deserr<E> for Param<T>
 where
     E: DeserializeError + MergeWithError<T::Err>,
     T: FromQueryParameter,

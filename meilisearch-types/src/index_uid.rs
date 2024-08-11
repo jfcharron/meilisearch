@@ -2,13 +2,15 @@ use std::error::Error;
 use std::fmt;
 use std::str::FromStr;
 
+use apistos::ApiComponent;
 use deserr::Deserr;
+use schemars::JsonSchema;
 
 use crate::error::{Code, ErrorCode};
 
 /// An index uid is composed of only ascii alphanumeric characters, - and _, between 1 and 400
 /// bytes long
-#[derive(Debug, Clone, PartialEq, Eq, Deserr)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserr, JsonSchema, ApiComponent)]
 #[deserr(try_from(String) = IndexUid::try_from -> IndexUidFormatError)]
 pub struct IndexUid(String);
 

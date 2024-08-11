@@ -11,6 +11,7 @@ use meilisearch_types::index_uid::IndexUid;
 use meilisearch_types::star_or::{OptionStarOr, OptionStarOrList};
 use meilisearch_types::task_view::TaskView;
 use meilisearch_types::tasks::{Kind, KindWithContent, Status};
+use schemars::JsonSchema;
 use serde::Serialize;
 use serde_json::json;
 use time::format_description::well_known::Rfc3339;
@@ -36,7 +37,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
     .service(web::resource("/cancel").route(web::post().to(SeqHandler(cancel_tasks))))
     .service(web::resource("/{task_id}").route(web::get().to(SeqHandler(get_task))));
 }
-#[derive(Debug, Deserr)]
+#[derive(Debug, Deserr, ApiComponent, JsonSchema)]
 #[deserr(error = DeserrQueryParamError, rename_all = camelCase, deny_unknown_fields)]
 pub struct TasksFilterQuery {
     #[deserr(default = Param(DEFAULT_LIMIT), error = DeserrQueryParamError<InvalidTaskLimit>)]
@@ -109,8 +110,8 @@ impl TaskDeletionOrCancelationQuery {
         )
     }
 }
-
-#[derive(Debug, Deserr)]
+use apistos::{ApiComponent, JsonSchema};
+#[derive(Debug, Deserr, ApiComponent, JsonSchema)]
 #[deserr(error = DeserrQueryParamError, rename_all = camelCase, deny_unknown_fields)]
 pub struct TaskDeletionOrCancelationQuery {
     #[deserr(default, error = DeserrQueryParamError<InvalidTaskUids>)]
@@ -158,6 +159,8 @@ impl TaskDeletionOrCancelationQuery {
     }
 }
 
+use apistos::api_operation;
+#[api_operation]
 async fn cancel_tasks(
     index_scheduler: GuardedData<ActionPolicy<{ actions::TASKS_CANCEL }>, Data<IndexScheduler>>,
     params: AwebQueryParameter<TaskDeletionOrCancelationQuery, DeserrQueryParamError>,
