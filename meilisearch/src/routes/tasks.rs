@@ -8,6 +8,7 @@ use meilisearch_types::deserr::DeserrQueryParamError;
 use meilisearch_types::error::deserr_codes::*;
 use meilisearch_types::error::{InvalidTaskDateError, ResponseError};
 use meilisearch_types::index_uid::IndexUid;
+use meilisearch_types::star_or::OffsetDateTime;
 use meilisearch_types::star_or::{OptionStarOr, OptionStarOrList};
 use meilisearch_types::task_view::TaskView;
 use meilisearch_types::tasks::{Kind, KindWithContent, Status};
@@ -16,7 +17,7 @@ use serde::Serialize;
 use serde_json::json;
 use time::format_description::well_known::Rfc3339;
 use time::macros::format_description;
-use time::{Date, Duration, OffsetDateTime, Time};
+use time::{Date, Duration, Time};
 use tokio::task;
 
 use super::{get_task_id, is_dry_run, SummarizedTaskView};
@@ -80,12 +81,12 @@ impl TasksFilterQuery {
             index_uids: self.index_uids.map(|x| x.to_string()).merge_star_and_none(),
             uids: self.uids.merge_star_and_none(),
             canceled_by: self.canceled_by.merge_star_and_none(),
-            before_enqueued_at: self.before_enqueued_at.merge_star_and_none(),
-            after_enqueued_at: self.after_enqueued_at.merge_star_and_none(),
-            before_started_at: self.before_started_at.merge_star_and_none(),
-            after_started_at: self.after_started_at.merge_star_and_none(),
-            before_finished_at: self.before_finished_at.merge_star_and_none(),
-            after_finished_at: self.after_finished_at.merge_star_and_none(),
+            before_enqueued_at: self.before_enqueued_at.merge_star_and_none().map(|d| d.0),
+            after_enqueued_at: self.after_enqueued_at.merge_star_and_none().map(|d| d.0),
+            before_started_at: self.before_started_at.merge_star_and_none().map(|d| d.0),
+            after_started_at: self.after_started_at.merge_star_and_none().map(|d| d.0),
+            before_finished_at: self.before_finished_at.merge_star_and_none().map(|d| d.0),
+            after_finished_at: self.after_finished_at.merge_star_and_none().map(|d| d.0),
         }
     }
 }
@@ -110,7 +111,7 @@ impl TaskDeletionOrCancelationQuery {
         )
     }
 }
-use apistos::{ApiComponent, JsonSchema};
+use apistos::ApiComponent;
 #[derive(Debug, Deserr, ApiComponent, JsonSchema)]
 #[deserr(error = DeserrQueryParamError, rename_all = camelCase, deny_unknown_fields)]
 pub struct TaskDeletionOrCancelationQuery {
@@ -126,17 +127,17 @@ pub struct TaskDeletionOrCancelationQuery {
     pub index_uids: OptionStarOrList<IndexUid>,
 
     #[deserr(default, error = DeserrQueryParamError<InvalidTaskAfterEnqueuedAt>, try_from(OptionStarOr<String>) = deserialize_date_after -> InvalidTaskDateError)]
-    pub after_enqueued_at: OptionStarOr<OffsetDateTime>,
+    pub after_enqueued_at: OptionStarOr<ApiDateTime>,
     #[deserr(default, error = DeserrQueryParamError<InvalidTaskBeforeEnqueuedAt>, try_from(OptionStarOr<String>) = deserialize_date_before -> InvalidTaskDateError)]
-    pub before_enqueued_at: OptionStarOr<OffsetDateTime>,
+    pub before_enqueued_at: OptionStarOr<ApiDateTime>,
     #[deserr(default, error = DeserrQueryParamError<InvalidTaskAfterStartedAt>, try_from(OptionStarOr<String>) = deserialize_date_after -> InvalidTaskDateError)]
-    pub after_started_at: OptionStarOr<OffsetDateTime>,
+    pub after_started_at: OptionStarOr<ApiDateTime>,
     #[deserr(default, error = DeserrQueryParamError<InvalidTaskBeforeStartedAt>, try_from(OptionStarOr<String>) = deserialize_date_before -> InvalidTaskDateError)]
-    pub before_started_at: OptionStarOr<OffsetDateTime>,
+    pub before_started_at: OptionStarOr<ApiDateTime>,
     #[deserr(default, error = DeserrQueryParamError<InvalidTaskAfterFinishedAt>, try_from(OptionStarOr<String>) = deserialize_date_after -> InvalidTaskDateError)]
-    pub after_finished_at: OptionStarOr<OffsetDateTime>,
+    pub after_finished_at: OptionStarOr<ApiDateTime>,
     #[deserr(default, error = DeserrQueryParamError<InvalidTaskBeforeFinishedAt>, try_from(OptionStarOr<String>) = deserialize_date_before -> InvalidTaskDateError)]
-    pub before_finished_at: OptionStarOr<OffsetDateTime>,
+    pub before_finished_at: OptionStarOr<ApiDateTime>,
 }
 
 impl TaskDeletionOrCancelationQuery {
@@ -149,12 +150,12 @@ impl TaskDeletionOrCancelationQuery {
             index_uids: self.index_uids.map(|x| x.to_string()).merge_star_and_none(),
             uids: self.uids.merge_star_and_none(),
             canceled_by: self.canceled_by.merge_star_and_none(),
-            before_enqueued_at: self.before_enqueued_at.merge_star_and_none(),
-            after_enqueued_at: self.after_enqueued_at.merge_star_and_none(),
-            before_started_at: self.before_started_at.merge_star_and_none(),
-            after_started_at: self.after_started_at.merge_star_and_none(),
-            before_finished_at: self.before_finished_at.merge_star_and_none(),
-            after_finished_at: self.after_finished_at.merge_star_and_none(),
+            before_enqueued_at: self.before_enqueued_at.merge_star_and_none().map(|d| d.0),
+            after_enqueued_at: self.after_enqueued_at.merge_star_and_none().map(|d| d.0),
+            before_started_at: self.before_started_at.merge_star_and_none().map(|d| d.0),
+            after_started_at: self.after_started_at.merge_star_and_none().map(|d| d.0),
+            before_finished_at: self.before_finished_at.merge_star_and_none().map(|d| d.0),
+            after_finished_at: self.after_finished_at.merge_star_and_none().map(|d| d.0),
         }
     }
 }

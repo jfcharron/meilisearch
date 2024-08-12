@@ -1,13 +1,15 @@
-use std::fmt;
+use std::fmt::{self};
 use std::marker::PhantomData;
-use std::ops::ControlFlow;
+use std::ops::{ControlFlow, Deref};
 use std::str::FromStr;
 
-use apistos::{ApiComponent, ApiErrorComponent};
+use apistos::ApiComponent;
 use deserr::{DeserializeError, Deserr, MergeWithError, ValueKind};
 use schemars::JsonSchema;
 use serde::de::Visitor;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use time::format_description::well_known::Rfc3339;
+use time::OffsetDateTime;
 
 use crate::deserr::query_params::FromQueryParameter;
 
@@ -350,5 +352,45 @@ mod tests {
 
         roundtrip(json!("products"), StarOr::Other("products".to_string()));
         roundtrip(json!("*"), StarOr::Star);
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ApiDateTime(pub OffsetDateTime);
+
+impl JsonSchema for ApiDateTime {
+    fn schema_name() -> String {
+        String::from("ApiDateTime")
+    }
+
+    fn json_schema(gen: &mut schemars::r#gen::SchemaGenerator) -> apistos::Schema {
+        String::json_schema(r#gen)
+    }
+}
+
+impl Deref for ApiDateTime {
+    type Target = OffsetDateTime;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Serialize for ApiDateTime {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer
+            .serialize_str(&self.0.format(&Rfc3339).map_err(|_| serde::ser::Error::custom(""))?)
+    }
+}
+
+impl<'t> Deserialize<'t> for ApiDateTime {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'t>,
+    {
+        Ok(Self(OffsetDateTime::deserialize(deserializer)?))
     }
 }
